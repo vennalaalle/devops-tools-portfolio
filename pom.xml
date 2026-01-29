@@ -71,7 +71,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
                 <configuration> <mainClass>com.devops.portfolioapp.PortfolioAppApplication</mainClass> </configuration>
-                </executions>
             </plugin>
 
             <!-- Maven Compiler Plugin -->
