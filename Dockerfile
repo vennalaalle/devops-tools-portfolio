@@ -2,8 +2,8 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven3'  // Ensure this matches your Jenkins Maven configuration name
-        jdk 'JDK11'     // Ensure this matches your Jenkins JDK configuration name
+        maven 'maven1'  // Ensure this matches your Jenkins Maven configuration name
+        jdk 'JDK17'     // Ensure this matches your Jenkins JDK configuration name
     }
     
     environment {
@@ -30,7 +30,7 @@ pipeline {
                 // Alternative: specify repository explicitly
                 // git branch: 'main', 
                 //     credentialsId: 'git-credentials',
-                //     url: 'https://github.com/your-username/your-repo.git'
+                //     url: 'https://github.com/vennalaalle/devops-tools-portfolio'
             }
         }
         
