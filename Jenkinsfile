@@ -2,22 +2,17 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven1'  // Ensure this matches your Jenkins Maven configuration name
-        jdk 'JDK17'     // Ensure this matches your Jenkins JDK configuration name
+        maven 'Maven3'
+        jdk 'JDK11'
     }
     
     environment {
-        // SonarQube configuration
-        SONAR_HOST_URL = 'http://localhost:9000'  // Update with your SonarQube URL
+        SONAR_HOST_URL = 'http://localhost:9000'
         SONAR_PROJECT_KEY = 'devops-portfolio'
-        
-        // Docker configuration
         DOCKER_IMAGE = 'devops-portfolio'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        DOCKER_REGISTRY = 'docker.io'  // Update with your registry
-        DOCKER_CREDENTIALS = 'dockerhub-credentials'  // Jenkins credentials ID
-        
-        // Application configuration
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_CREDENTIALS = 'dockerhub-credentials'
         APP_PORT = '8080'
     }
     
@@ -26,11 +21,6 @@ pipeline {
             steps {
                 echo '📥 Checking out code from Git repository...'
                 checkout scm
-                
-                // Alternative: specify repository explicitly
-                // git branch: 'main', 
-                //     credentialsId: 'git-credentials',
-                //     url: 'https://github.com/your-username/your-repo.git'
             }
         }
         
@@ -53,23 +43,22 @@ pipeline {
         }
         
         stage('Unit Tests') {
+            when {
+                // Only run this stage if test files exist
+                expression {
+                    return fileExists('src/test/java') || fileExists('src/test')
+                }
+            }
             steps {
                 echo '🧪 Running unit tests...'
                 sh 'mvn test'
             }
             post {
                 always {
-                    script {
-                        // Check if test reports exist before publishing
-                        def testReports = findFiles(glob: '**/target/surefire-reports/*.xml')
-                        
-                        if (testReports.length > 0) {
-                            echo "📊 Publishing ${testReports.length} test report(s)"
-                            junit '**/target/surefire-reports/*.xml'
-                        } else {
-                            echo '⚠️ No test reports found - skipping JUnit publishing'
-                        }
-                    }
+                    // Use allowEmptyResults to prevent failures when no tests exist
+                    junit allowEmptyResults: true, 
+                          testResults: '**/target/surefire-reports/*.xml',
+                          skipPublishingChecks: true
                 }
                 success {
                     echo '✅ All tests passed!'
@@ -84,7 +73,7 @@ pipeline {
             steps {
                 echo '🔍 Running SonarQube code analysis...'
                 script {
-                    withSonarQubeEnv('SonarQube') {  // Must match your SonarQube server name in Jenkins
+                    withSonarQubeEnv('SonarQube') {
                         sh '''
                             mvn sonar:sonar \
                                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
@@ -167,7 +156,7 @@ pipeline {
             steps {
                 echo '💓 Performing health check...'
                 script {
-                    sleep 10  // Wait for application to start
+                    sleep 10
                     sh """
                         curl -f http://localhost:${APP_PORT}/health || exit 1
                     """
@@ -183,11 +172,9 @@ pipeline {
         }
         success {
             echo '🎉 Pipeline completed successfully!'
-            // Add notification here (email, Slack, etc.)
         }
         failure {
             echo '💥 Pipeline failed!'
-            // Add notification here (email, Slack, etc.)
         }
     }
 }
