@@ -2,8 +2,8 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven1'  // Ensure this matches your Jenkins Maven configuration name
-        jdk 'JDK17'     // Ensure this matches your Jenkins JDK configuration name
+        maven 'Maven3'  // Ensure this matches your Jenkins Maven configuration name
+        jdk 'JDK11'     // Ensure this matches your Jenkins JDK configuration name
     }
     
     environment {
@@ -57,18 +57,29 @@ pipeline {
                 echo '🧪 Running unit tests...'
                 sh 'mvn test'
             }
-            post{
-                success{
-                    script{
-                        if (fileExists('target/surefire-reports')) {
-                            junit 'target/surefire-reports/*.xml'
-                        }else{
-                            echo "⚠️ No test reports found, skipping JUnit publishing."
+            post {
+                always {
+                    script {
+                        // Check if test reports exist before publishing
+                        def testReports = findFiles(glob: '**/target/surefire-reports/*.xml')
+                        
+                        if (testReports.length > 0) {
+                            echo "📊 Publishing ${testReports.length} test report(s)"
+                            junit '**/target/surefire-reports/*.xml'
+                        } else {
+                            echo '⚠️ No test reports found - skipping JUnit publishing'
                         }
                     }
                 }
+                success {
+                    echo '✅ All tests passed!'
+                }
+                failure {
+                    echo '❌ Some tests failed!'
+                }
             }
-                    
+        }
+        
         stage('SonarQube Analysis') {
             steps {
                 echo '🔍 Running SonarQube code analysis...'
