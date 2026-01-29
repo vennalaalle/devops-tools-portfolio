@@ -58,10 +58,7 @@ pipeline {
                 sh 'mvn test'
             }
             post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                    echo '📊 Test results published'
-                }
+                success { // Only publish if reports exist script { if (fileExists('target/surefire-reports')) { junit 'target/surefire-reports/*.xml' } else { echo "⚠️ No test reports found, skipping JUnit publishing." }
             }
         }
         
