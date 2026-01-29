@@ -57,11 +57,18 @@ pipeline {
                 echo '🧪 Running unit tests...'
                 sh 'mvn test'
             }
-            post {
-                success { // Only publish if reports exist script { if (fileExists('target/surefire-reports')) { junit 'target/surefire-reports/*.xml' } else { echo "⚠️ No test reports found, skipping JUnit publishing." }
+            post{
+                success{
+                    script{
+                        if (fileExists('target/surefire-reports')) {
+                            junit 'target/surefire-reports/*.xml'
+                        }else{
+                            echo "⚠️ No test reports found, skipping JUnit publishing."
+                        }
+                    }
+                }
             }
-        }
-        
+                    
         stage('SonarQube Analysis') {
             steps {
                 echo '🔍 Running SonarQube code analysis...'
