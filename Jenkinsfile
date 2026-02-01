@@ -17,7 +17,7 @@ pipeline {
     }
     
     stages {
-        stage('SCM') {
+        stage('checkout') {
             steps {
                 echo '📥 Checking out code from Git repository...'
                 checkout scm
@@ -70,11 +70,19 @@ pipeline {
         }
         
        stage('SonarQube Analysis') {
-           def scannerHome = tool 'SonarScanner';
-           withSonarQubeEnv() {
-                sh "${scannerHome}/bin/sonar-scanner"
-           }
-       }
+            steps {
+                echo '🔍 Running SonarQube code analysis...'
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh '''
+                            mvn sonar:sonar \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.host.url=${SONAR_HOST_URL}
+                        '''
+                    }
+                }
+            }
+        }
         
         stage('Quality Gate') {
             steps {
